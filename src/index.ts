@@ -1,51 +1,21 @@
 import * as Ganache from "ganache";
 const hre = () => require("hardhat");
-import { Test, Describe } from "./types";
+const glob = require("glob");
 
-const tests: Test[] = [];
+import Suite from "./suite";
 
-export function test(name: string, fn: Function) {
-  tests.push({ name, fn });
-}
+const suite = new Suite();
 
-export function describe(name: string, fn: Function) {
-  console.log(name);
-  fn();
-}
-
-function run() {
-  tests.forEach((t: Test) => {
-    return (() => {
-      try {
-        const startTime = new Date().getTime();
-        t.fn();
-        const totalTime = new Date().getTime() - startTime;
-        console.log("  ✅", t.name, totalTime);
-      } catch (e: any) {
-        console.log("  ❌", t.name);
-
-        console.log(e.stack);
-      }
-    })();
-  });
-}
-
-declare global {
-  function describe(title: string, fn: Function): void;
-  function test(title: string, fn: Function): void;
-  function ganache(options?: any): any;
-  var hre: any;
-}
-
-global.describe = describe;
-global.test = test;
-global.ganache = Ganache.provider;
+global.describe = suite.describe.bind(suite);
+global.test = suite.test.bind(suite);
+global.beforeEach = () => {};
+global.ganache = Ganache;
 global.hre = hre;
 
-const files = process.argv.slice(2);
-console.log(files);
-files.forEach((file) => {
-  require(file);
-});
+//const files = process.argv.slice(2);
 
-run();
+glob(process.argv.slice(2)[0], null, (er: any, files: string[]) => {
+  files.forEach((file) => {
+    require("../" + file);
+  });
+});
